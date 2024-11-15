@@ -1,0 +1,12 @@
+{
+    "lang": "en-us",
+    "name": "gt data client",
+    "short_name": "GT Data",
+    "display": "standalone",
+    "icons": [
+        {
+            "src": "icon512.png",
+            "sizes": "512x512"
+        }
+    ]
+}

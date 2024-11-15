@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="index.css">
+  <link rel="manifest" href="manifest.json">
+  <title>GT Data Client</title>
+</head>
+<body>
+  <div class="topbar">
+    <p>Hello</p>
+    <button id="start-node-btn">Root Node</button>
+    <button id="reset-btn">Reset</button>
+    <button id="upload-btn">Upload</button>
+    <button id="ping-btn">Ping</button>
+    <button id="clr-ping-btn">ClrPing</button>
+  </div>
+  <div id="map-container">
+    <div id="map">
+      <div id="map-buttons" class="hide">
+        <button>Add Path</button>
+      </div>
+      <div id="map-nodes"></div>
+      <div id="map-paths"></div>
+    </div>
+  </div>
+  <script src="map_renderer.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js", {scope: "/"});
+    }
+  </script>
+</body>
+</html>

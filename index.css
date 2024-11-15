@@ -1,0 +1,79 @@
+body {
+    margin: 0;
+}
+
+.topbar {
+    display: flex;
+}
+
+.topbar > button {
+    background-color: green;
+}
+
+.topbar button.disabled {
+    background-color: red;
+}
+
+#map-container {
+    display: flex;
+    justify-content: center;
+    padding: 5% 3%;
+    height: 80vh;
+}
+
+#map {
+    flex: 1;
+    border: 2px solid blue;
+    position: relative
+}
+
+#map-buttons {
+    position: absolute;
+    display: flex;
+    bottom: 0;
+    right: 0;
+}
+
+.node {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    transform: translate(-50%, -50%);
+    background-color: rgb(109, 7, 0);
+}
+
+.node.selected {
+    border-radius: 100%;
+    z-index: 2;
+}
+
+.node.selected > div {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 15px;
+    height: 15px;
+    border-radius: 100%;
+    transform: translate(-50%, -50%);
+    border: 3px solid orange;
+    z-index: -1;
+}
+
+.last-node {
+    background-color: rgb(206, 0, 0);
+}
+
+.root-node {
+    background-color: gold;
+}
+
+.ping-node {
+    background-color: blue;
+}
+
+.edge {
+}
+
+.hide {
+    display: none;
+}
