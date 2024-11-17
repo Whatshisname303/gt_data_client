@@ -1,10 +1,13 @@
 let map = document.getElementById("map");
 let w = map.offsetWidth, h = map.offsetHeight;
 
-let nodes = {}
+let nodes = {};
+let paths = [];
 let nextId = 0;
 let selectedNode = null;
 let lastNode = null;
+let isModalActive = true;
+let geoRequestLock = false;
 
 window.onresize = () => {
     w = map.offsetWidth;
@@ -17,10 +20,18 @@ const startNodeBtn = document.getElementById("start-node-btn");
 const pingBtn = document.getElementById("ping-btn");
 const clrPingBtn = document.getElementById("clr-ping-btn");
 
-const mapButtons = document.getElementById("map-buttons");
 const mapNodes = document.getElementById("map-nodes")
 
+const mapButtons = document.getElementById("map-buttons");
+const addPathBtn = document.getElementById("add-path-btn");
+
+const pathModal = document.getElementById("path-modal");
+const pathModalCloseBtn = pathModal.querySelector(".close-btn");
+const pathModalConfirmBtn = pathModal.querySelector(".create-btn");
+const pathModalDescription = pathModal.querySelector("input");
+
 mapButtons.style.display = "none";
+pathModal.style.display = "none";
 
 // ----------------------------------- data rendering -----------
 
@@ -56,6 +67,7 @@ function getGeoBoundaries() {
 
 // current algorithm scales x and y independently, could change to scale together
 function displayNodes() {
+    // todo: draw paths somehow
     const viewWidth = map.offsetWidth;
     const viewHeight = map.offsetHeight;
     const [minLong, maxLong, minLat, maxLat] = getGeoBoundaries();
@@ -63,9 +75,11 @@ function displayNodes() {
     const coordWidth = maxLat - minLat;
     const coordHeight = maxLong - minLong;
 
+    const screenCoords = {};
+
     mapNodes.innerHTML = '';
 
-    for (const node of Object.values(nodes)) {
+    for (const [k, node] of Object.entries(nodes)) {
         const {longitude, latitude} = node;
         const nodeElement = document.createElement("div");
 
@@ -77,6 +91,8 @@ function displayNodes() {
 
         nodeElement.style.left = String(viewWidth * latAlpha) + "px";
         nodeElement.style.bottom = String(viewHeight * longAlpha) + "px";
+
+        screenCoords[k] = [viewWidth * latAlpha, viewHeight * longAlpha];
 
         if (lastNode == node) {
             nodeElement.classList.add("last-node");
@@ -102,6 +118,31 @@ function displayNodes() {
 
         nodeElement.classList.add("node");
         mapNodes.appendChild(nodeElement);
+    }
+
+    for (const path of paths) {
+        const fromPos = screenCoords[path.from];
+        const toPos = screenCoords[path.to];
+
+        const dx = toPos[0] - fromPos[0];
+        const dy = toPos[1] - fromPos[1];
+
+        const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+        const angle = Math.atan(dy / dx);
+
+        const element = document.createElement("div");
+        element.style.width = `${distance}px`;
+        element.style.left = `${fromPos[0]}px`;
+        element.style.bottom = `${fromPos[1]}px`;
+        element.style.transform = `translateY(-5px) rotate(${-angle}rad)`;
+
+
+        element.addEventListener("click", (e) => {
+            // todo: should have a popup to edit or delete or whatever
+        });
+
+        element.classList.add("path");
+        mapNodes.appendChild(element);
     }
 }
 
@@ -209,3 +250,82 @@ clrPingBtn.addEventListener("click", () => {
 
 // ----------------------------------- map buttons --------------
 
+addPathBtn.addEventListener("click", () => {
+    if (!selectedNode) {
+        return; // shouldn't happen
+    }
+    pathModal.style.display = "flex";
+    const input = pathModal.querySelector("input");
+    input.value = "";
+    pathModalConfirmBtn.classList.add("incomplete");
+    console.log("Adding path");
+});
+
+pathModalCloseBtn.addEventListener("click", () => {
+    pathModal.style.display = "none";
+});
+
+pathModalConfirmBtn.addEventListener("click", () => {
+    if (geoRequestLock) {
+        return;
+    }
+    if (pathModalConfirmBtn.classList.contains("incomplete")) {
+        return;
+    }
+
+    console.log("Dropping path");
+    geoRequestLock = true;
+    pathModalConfirmBtn.innerHTML = "saving...";
+
+    const options = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+    };
+
+    // todo: fix all this garbage
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const node = {
+                longitude: pos.coords.longitude,
+                latitude: pos.coords.latitude,
+                altitude: pos.coords.altitude,
+                heading: pos.coords.heading,
+            };
+
+            const path = {
+                from: Object.keys(nodes).find(k => nodes[k] === selectedNode),
+                to: String(nextId),
+                description: pathModalDescription.value,
+            };
+
+            nodes[nextId++] = node;
+            paths.push(path);
+
+            lastNode = node;
+            displayNodes();
+            pingBtn.classList.remove("disabled");
+            geoRequestLock = false;
+            pathModalConfirmBtn.innerHTML = "Make Node";
+            pathModal.style.display = "none";
+        },
+        (err) => {
+            console.log("Couldn't get position: ", err);
+            pingBtn.classList.remove("disabled");
+            geoRequestLock = false;
+            pathModalConfirmBtn.innerHTML = "Err making node";
+        },
+        options,
+    );
+});
+
+pathModal.querySelectorAll("input").forEach(inp => inp.addEventListener("change", () => {
+    for (const box of pathModal.querySelectorAll("input")) {
+        if (box.value == "") {
+            pathModalConfirmBtn.classList.add("incomplete");
+            return;
+        }
+    }
+    pathModalConfirmBtn.classList.remove("incomplete");
+}));

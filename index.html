@@ -19,10 +19,21 @@
   <div id="map-container">
     <div id="map">
       <div id="map-buttons" class="hide">
-        <button>Add Path</button>
+        <button id="add-path-btn">Add Path</button>
       </div>
       <div id="map-nodes"></div>
-      <div id="map-paths"></div>
+    </div>
+  </div>
+  <div id="templates">
+    <div id="path-modal" class="hide">
+      <p>Creating new path</p>
+      <p>Description</p>
+      <input>
+      <p>Will add stuff like image later</p>
+      <div class="modal-buttons">
+        <button class="create-btn">Make Node</button>
+        <button class="close-btn">Cancel</button>
+      </div>
     </div>
   </div>
   <script src="map_renderer.js"></script>
