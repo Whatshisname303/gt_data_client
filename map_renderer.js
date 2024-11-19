@@ -12,13 +12,15 @@ let geoRequestLock = false;
 window.onresize = () => {
     w = map.offsetWidth;
     h = map.offsetHeight;
-    console.log("Updated size");
     displayNodes();
 }
 
 const startNodeBtn = document.getElementById("start-node-btn");
+const resetBtn = document.getElementById("reset-btn");
 const pingBtn = document.getElementById("ping-btn");
 const clrPingBtn = document.getElementById("clr-ping-btn");
+const fetchBtn = document.getElementById("fetch-btn");
+const publishBtn = document.getElementById("publish-btn");
 
 const mapNodes = document.getElementById("map-nodes")
 
@@ -30,8 +32,20 @@ const pathModalCloseBtn = pathModal.querySelector(".close-btn");
 const pathModalConfirmBtn = pathModal.querySelector(".create-btn");
 const pathModalDescription = pathModal.querySelector("input");
 
+const saveModal = document.getElementById("save-modal");
+const saveModalCloseBtn = saveModal.querySelector(".close-btn");
+const saveModalConfirmBtn = saveModal.querySelector(".create-btn");
+const saveModalEmail = saveModal.querySelector("input");
+
+const fetchModal = document.getElementById("fetch-modal");
+const fetchModalCloseBtn = fetchModal.querySelector(".close-btn");
+const fetchModalConfirmBtn = fetchModal.querySelector(".create-btn");
+const fetchModalEmail = fetchModal.querySelector("input");
+
 mapButtons.style.display = "none";
 pathModal.style.display = "none";
+saveModal.style.display = "none";
+fetchModal.style.display = "none";
 
 // ----------------------------------- data rendering -----------
 
@@ -239,6 +253,12 @@ pingBtn.addEventListener("click", () => {
     );
 });
 
+resetBtn.addEventListener("click", () => {
+    nodes = {};
+    paths = [];
+    displayNodes();
+});
+
 clrPingBtn.addEventListener("click", () => {
     for (const [k, node] of Object.entries(nodes)) {
         if (node.isPing) {
@@ -246,6 +266,18 @@ clrPingBtn.addEventListener("click", () => {
             displayNodes();
         }
     }
+});
+
+publishBtn.addEventListener("click", async () => {
+    saveModal.style.display = "flex";
+    saveModalEmail.value = "";
+    saveModalConfirmBtn.classList.add("incomplete");
+});
+
+fetchBtn.addEventListener("click", async () => {
+    fetchModal.style.display = "flex";
+    fetchModalEmail.value = "";
+    fetchModalConfirmBtn.classList.add("incomplete");
 });
 
 // ----------------------------------- map buttons --------------
@@ -258,8 +290,9 @@ addPathBtn.addEventListener("click", () => {
     const input = pathModal.querySelector("input");
     input.value = "";
     pathModalConfirmBtn.classList.add("incomplete");
-    console.log("Adding path");
 });
+
+// ----------------------------------- path modal --------------
 
 pathModalCloseBtn.addEventListener("click", () => {
     pathModal.style.display = "none";
@@ -273,7 +306,6 @@ pathModalConfirmBtn.addEventListener("click", () => {
         return;
     }
 
-    console.log("Dropping path");
     geoRequestLock = true;
     pathModalConfirmBtn.innerHTML = "saving...";
 
@@ -328,4 +360,99 @@ pathModal.querySelectorAll("input").forEach(inp => inp.addEventListener("change"
         }
     }
     pathModalConfirmBtn.classList.remove("incomplete");
+}));
+
+// ----------------------------------- save modal --------------
+
+saveModalCloseBtn.addEventListener("click", () => {
+    saveModal.style.display = "none";
+});
+
+saveModalConfirmBtn.addEventListener("click", async () => {
+    if (geoRequestLock) {
+        return;
+    }
+    if (pathModalConfirmBtn.classList.contains("incomplete")) {
+        return;
+    }
+
+    geoRequestLock = true;
+    saveModalConfirmBtn.innerHTML = "saving...";
+
+    try {
+        const data = {nodes, paths};
+        const email = saveModalEmail.value;
+        const res = await fetch("http://128.101.131.201:3000/save_nodes/" + email, {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+        });
+    } catch (err) {
+        console.error(err);
+    }
+
+    geoRequestLock = false;
+    saveModalConfirmBtn.innerHTML = "Save";
+    saveModal.style.display = "none";
+    displayNodes();
+});
+
+saveModal.querySelectorAll("input").forEach(inp => inp.addEventListener("change", () => {
+    for (const box of saveModal.querySelectorAll("input")) {
+        if (box.value == "") {
+            saveModalConfirmBtn.classList.add("incomplete");
+            return;
+        }
+    }
+    saveModalConfirmBtn.classList.remove("incomplete");
+}));
+
+// ----------------------------------- fetch modal -------------
+
+fetchModalCloseBtn.addEventListener("click", () => {
+    fetchModal.style.display = "none";
+});
+
+fetchModalConfirmBtn.addEventListener("click", async () => {
+    if (geoRequestLock) {
+        return;
+    }
+    if (pathModalConfirmBtn.classList.contains("incomplete")) {
+        return;
+    }
+
+    geoRequestLock = true;
+    fetchModalConfirmBtn.innerHTML = "saving...";
+
+    try {
+        const email = fetchModalEmail.value;
+        const res = await fetch("http://128.101.131.201:3000/fetch_nodes/" + email);
+        const json = await res.json();
+        if (res.ok) {
+            nodes = json.nodes;
+            paths = json.paths;
+        } else {
+            console.log("Got no data:", json);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+
+    geoRequestLock = false;
+    fetchModalConfirmBtn.innerHTML = "Fetch";
+    fetchModal.style.display = "none";
+    displayNodes();
+});
+
+fetchModal.querySelectorAll("input").forEach(inp => inp.addEventListener("change", () => {
+    for (const box of fetchModal.querySelectorAll("input")) {
+        if (box.value == "") {
+            fetchModalConfirmBtn.classList.add("incomplete");
+            return;
+        }
+    }
+    fetchModalConfirmBtn.classList.remove("incomplete");
 }));

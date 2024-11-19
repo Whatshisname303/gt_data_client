@@ -15,6 +15,8 @@
     <button id="upload-btn">Upload</button>
     <button id="ping-btn">Ping</button>
     <button id="clr-ping-btn">ClrPing</button>
+    <button id="fetch-btn">Fetch</button>
+    <button id="publish-btn">Publish</button>
   </div>
   <div id="map-container">
     <div id="map">
@@ -25,13 +27,29 @@
     </div>
   </div>
   <div id="templates">
-    <div id="path-modal" class="hide">
+    <div id="path-modal">
       <p>Creating new path</p>
       <p>Description</p>
       <input>
       <p>Will add stuff like image later</p>
       <div class="modal-buttons">
         <button class="create-btn">Make Node</button>
+        <button class="close-btn">Cancel</button>
+      </div>
+    </div>
+    <div id="save-modal">
+      <p>Update saved path</p>
+      <input>
+      <div class="modal-buttons">
+        <button class="create-btn">Save</button>
+        <button class="close-btn">Cancel</button>
+      </div>
+    </div>
+    <div id="fetch-modal">
+      <p>Load saved path</p>
+      <input>
+      <div class="modal-buttons">
+        <button class="create-btn">Fetch</button>
         <button class="close-btn">Cancel</button>
       </div>
     </div>
